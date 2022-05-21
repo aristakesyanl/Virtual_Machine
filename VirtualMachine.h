@@ -24,6 +24,7 @@ private:
     //Input
     //Output
     int R[9]={0};
+    int &Count=R[6];
     void ALU(int, int, int, int);
     void Condition(int, int, int, int);
     int hexToDec(char, char);
