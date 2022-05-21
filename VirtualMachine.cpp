@@ -9,7 +9,7 @@
 
 VirtualMachine::VirtualMachine(std:: string& fileName){
 
-	std::ifstream in(fileName);
+    std::ifstream in(fileName);
     std::string line;
     if (in.is_open()) {
         while (getline(in, line)) {
@@ -135,7 +135,7 @@ void VirtualMachine::run(){
 			}
 		}
 		else{
-            int jumpaddress=hexToDec(content[Count+6],content[Count+7])*8;
+                        int jumpaddress=hexToDec(content[Count+6],content[Count+7])*8;
 			Condition(op2, arg1, arg2, jumpaddress);
 		}
 
