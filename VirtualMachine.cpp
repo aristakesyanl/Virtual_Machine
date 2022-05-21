@@ -4,11 +4,12 @@
 #include<string>
 #include<bitset>
 #include<locale.h>
+#include<algorithm>
 #include"VirtualMachine.h"
 
 VirtualMachine::VirtualMachine(std:: string& filename){
 
-	std::ifstream ifs(filename);
+    std::ifstream ifs(filename);
     std::string content( (std::istreambuf_iterator<char>(ifs) ),
                        (std::istreambuf_iterator<char>()    ) );
     ifs.close();
@@ -28,10 +29,11 @@ VirtualMachine::VirtualMachine(std:: string& filename){
 }
 
 void VirtualMachine::run(){
+	int Count=R[6];
 
     while(Count<(int)content.size()){
 
-    //get opcode
+    	//get opcode
 		//if 7th or 8th bits are not set or opcode is for conditional statement
 		//it is arithmetic instruction with registers
 		std::string op1=hexToBin(content[Count], content[Count+1]);
@@ -71,7 +73,7 @@ void VirtualMachine::run(){
 		}
 		
 	
-		int dest=hexDec[Count+6];
+		dest=hexDec[Count+6];
 		if(dest>7){
 			throw std::invalid_argument("Invalid Destination");
 		}
@@ -94,7 +96,7 @@ void VirtualMachine::run(){
 			}
 		}
 		else{
-            int jumpaddress=hexDec(content[Count+6],content[Count+7]);
+            int jumpaddress=hexToDec(content[Count+6],content[Count+7]);
 			Condition(op2, arg1, arg2, jumpaddress);
 		}
 
@@ -139,6 +141,7 @@ void VirtualMachine::ALU(int op, int arg1, int arg2, int dest){
 }
 
 void VirtualMachine::Condition(int op, int arg1, int arg2,int jumpaddress){
+	int Count=R[6];
 
 	switch(op){
 		case 32:
