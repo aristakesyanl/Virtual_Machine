@@ -7,16 +7,21 @@
 #include<algorithm>
 #include"VirtualMachine.h"
 
-VirtualMachine::VirtualMachine(std:: string& filename){
+VirtualMachine::VirtualMachine(std:: string& fileName){
 
-    std::ifstream ifs(filename);
-    std::string content( (std::istreambuf_iterator<char>(ifs) ),
-                       (std::istreambuf_iterator<char>()    ) );
-    ifs.close();
+	std::ifstream in(fileName);
+    std::string line;
+    if (in.is_open()) {
+        while (getline(in, line)) {
+            if (!(line.empty() || line.find_first_not_of(' ') == std::string::npos)) {
+                line.erase(remove(line.begin(), line.end(),' '), line.end());
+                content+=line;
+            }
+        }
+    }
 
     content.erase(remove(content.begin(), content.end(),' '), content.end());
 
-    
 	if((int)content.size()%8!=0){
 		throw std::invalid_argument("Invalid Input Format");
 	}
@@ -29,8 +34,7 @@ VirtualMachine::VirtualMachine(std:: string& filename){
 }
 
 void VirtualMachine::run(){
-	int Count=R[6];
-
+	
     while(Count<(int)content.size()){
 
     	//get opcode
@@ -38,17 +42,18 @@ void VirtualMachine::run(){
 		//it is arithmetic instruction with registers
 		std::string op1=hexToBin(content[Count], content[Count+1]);
 		int op2=hexToDec(content[Count], content[Count+1]);
-		int arg1;
-		int arg2;
-		int dest;
+		int arg1=-1;
+		int arg2=-1;
+		int dest=-1;
+
 		if(op1[6]=='1'){
 			arg1=hexToDec(content[Count+2], content[Count+3]);
 		}
 		else{
-			if(content[Count+3]!='0'){
+			if(content[Count+2]!='0'){
 				throw std::invalid_argument("Invalid First Argument");
 			}
-			int index=hexDec[content[Count+2]];
+			int index=hexDec[content[Count+3]];
 			if(index>7){
 				throw std::invalid_argument("Invalid First Argument");
 			}
@@ -60,10 +65,10 @@ void VirtualMachine::run(){
 			arg2=hexToDec(content[Count+4], content[Count+5]);
 		}
 		else{
-			if(content[Count+5]!='0'){
+			if(content[Count+4]!='0'){
 				throw std::invalid_argument("Invalid Second Argument");
 			}
-			int index=hexDec[content[Count+4]];
+			int index=hexDec[content[Count+5]];
 			if(index>7){
 				throw std::invalid_argument("Invalid Second Argument");
 			}
@@ -71,15 +76,49 @@ void VirtualMachine::run(){
 				arg2=R[index];
 			}
 		}
-		
-	
-		dest=hexDec[Count+6];
-		if(dest>7){
-			throw std::invalid_argument("Invalid Destination");
+		if(op2>=32 && op2<=37){
+			if(content[Count+2]!='0'){
+				throw std::invalid_argument("Invalid First Argument");
+			}
+			else{
+				if(hexDec[content[Count+3]]>7){
+					throw std::invalid_argument("Invalid First Argument");
+				}
+				else{
+					arg1=R[hexDec[content[Count+3]]];
+				}
+			}
+			if(content[Count+4]!='0'){
+				throw std::invalid_argument("Invalid First Argument");
+			}
+			else{
+				if(hexDec[content[Count+5]]>7){
+					throw std::invalid_argument("Invalid First Argument");
+				}
+				else{
+					arg2=R[hexDec[content[Count+5]]];
+				}
+			}
 		}
-		if(dest==7){
-			dest++;
+
+		if(!(op2>=32 && op2<=37)){
+			if(content[Count+6]!='0'){
+			   throw std::invalid_argument("Invalid Destination");
+			}
+			else{
+
+				dest=hexDec[content[Count+7]];
+				if(dest>7){
+					throw std::invalid_argument("Invalid Destination");
+				}
+
+				if(dest==7){
+					dest++;
+				}
+
+			}
 		}
+
 		
 		if(!(op2>=32 && op2<=37)){
 			int fbyte=hexDec[Count+1];
@@ -96,12 +135,11 @@ void VirtualMachine::run(){
 			}
 		}
 		else{
-            int jumpaddress=hexToDec(content[Count+6],content[Count+7]);
+            int jumpaddress=hexToDec(content[Count+6],content[Count+7])*8;
 			Condition(op2, arg1, arg2, jumpaddress);
 		}
 
     }
-
 }
 
 void VirtualMachine::ALU(int op, int arg1, int arg2, int dest){
@@ -141,7 +179,6 @@ void VirtualMachine::ALU(int op, int arg1, int arg2, int dest){
 }
 
 void VirtualMachine::Condition(int op, int arg1, int arg2,int jumpaddress){
-	int Count=R[6];
 
 	switch(op){
 		case 32:
@@ -228,4 +265,19 @@ void VirtualMachine::watchRegisters(){
 	std::cout<<"Input: "<<R[7]<<std::endl;
 	std::cout<<"Output: "<<R[8]<<std::endl;
 
+}
+
+int main(int argc, char* argv[]) {
+    
+    if(argc<2){
+        std::cerr<<"No Arguments Provided"<<std::endl;
+    }
+    
+    for (int i = 1; i < argc; i++) {
+
+        std::string str(argv[i]);
+        VirtualMachine a(str);
+        a.run();
+        a.watchRegisters();
+    }
 }
